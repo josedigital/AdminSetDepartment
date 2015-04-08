@@ -1,0 +1,75 @@
+<?php
+
+/**
+ * Auto set department of a page on save
+ *
+ */
+
+class AdminSetDepartment extends WireData implements Module {
+
+	/**
+	 * getModuleInfo is a module required by all modules to tell ProcessWire about them
+	 *
+	 * @return array
+	 *
+	 */
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Set Department',
+			'version' => 1, 
+			'summary' => 'Sets department of a page based on department homepage.',
+			'author' => 'alex rodriguez, horchatadesign.com',
+			'singular' => true, 
+			'autoload' => true, 
+			);
+	}
+
+	public function init() {
+		// add a hook after a page is saved, call setdepartment method
+		$this->pages->addHookBefore('save', $this, 'setdepartment');
+	}
+
+
+
+	/**
+	 * createpages hooks into the $pages->save method and creates sub pages automatically
+	 *
+	 */
+	public function setdepartment(HookEvent $event) {
+		// get page from first argument (e.g. id=1018)
+		$page = $event->arguments[0]; 
+		
+		
+		if($page->template->flags & Template::flagSystem) {
+		} else {
+			// if department not set, set it
+			if(!$page->department) {
+
+				if($page->template == "department-homepage") {
+					$page->department = $page;
+				} else {
+					
+					// get parent department page
+					$rents = $page->parentsUntil("template=department");
+
+					// $rents is a PageArray (but only one result should return) so get the first one
+					$dept = $rents->first();
+
+					// set department
+					$page->department = $dept;
+
+					$this->message("Saved to {$dept->title}");
+
+				}
+
+			}
+		}
+			
+		
+
+	}
+
+
+
+
+}
